@@ -70,7 +70,7 @@ function Navbar({ showModal }) {
                 <img src={iconSrc} />
               </div>
               <span className="text-2xl font-bold text-foreground">
-                DexSwap
+                VertexSwap
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-6">
