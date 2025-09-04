@@ -148,7 +148,7 @@ function Pools({ handlePoolAddLiquidity, refresh }) {
   }
   return (
     <div className="w-full sm:w-5/6 lg:w-1/2 ">
-      {showModal && (
+{/*       {showModal && (
         <div
           onClick={() => {
             setShowModal(false);
@@ -227,8 +227,8 @@ function Pools({ handlePoolAddLiquidity, refresh }) {
           </div>
         </div>
       )}
-
-      {/* {showModal && (
+ */}
+      {showModal && (
         <div
           onClick={() => {
             setShowModal(false);
@@ -334,7 +334,7 @@ function Pools({ handlePoolAddLiquidity, refresh }) {
             </div>
           </div>
         </div>
-      )} */}
+      )}
 
       {showRemoveModal && (
         <RemoveLiquidity
