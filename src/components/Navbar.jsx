@@ -12,7 +12,7 @@ import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { isSettingModalVisible } from "../redux/slice/modalSlice";
 import { setAddress, setConnection } from "../redux/slice/userDetails";
-import iconSrc from "../assets/angh.png";
+import iconSrc from "../assets/swap.png";
 
 function Navbar({ showModal }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -70,7 +70,7 @@ function Navbar({ showModal }) {
                 <img src={iconSrc} />
               </div>
               <span className="text-2xl font-bold text-foreground">
-                ANGHSwap
+                DexSwap
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-6">
