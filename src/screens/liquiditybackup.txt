@@ -1,0 +1,421 @@
+import { useState } from "react";
+import eth from "../assets/tokens/eth.svg";
+import usdt from "../assets/tokens/usdt.svg";
+import xrp from "../assets/tokens/xrp.svg";
+
+const liquidityPools = [
+  {
+    id: 1,
+    name: "ADEX/USDC",
+    apy: 24.5,
+    tvl: 2450000,
+    volume24h: 125000,
+    myLiquidity: 5420,
+    token1: "ADEX",
+    token2: "USDC",
+    token1Balance: 1250,
+    token2Balance: 3170,
+    poolShare: 0.22,
+  },
+  {
+    id: 2,
+    name: "ADEX/ETH",
+    apy: 18.2,
+    tvl: 1850000,
+    volume24h: 89000,
+    myLiquidity: 2100,
+    token1: "ADEX",
+    token2: "ETH",
+    token1Balance: 850,
+    token2Balance: 1250,
+    poolShare: 0.11,
+  },
+  {
+    id: 3,
+    name: "USDC/ETH",
+    apy: 12.8,
+    tvl: 5200000,
+    volume24h: 340000,
+    myLiquidity: 0,
+    token1: "USDC",
+    token2: "ETH",
+    token1Balance: 0,
+    token2Balance: 0,
+    poolShare: 0,
+  },
+];
+
+const WETH = "0xae13d989dac2f0debff460ac112a837c89baa7cd";
+const USDT = "0xae13d989dac2f0debff460ac112a837c89baa7cd";
+const WANGH = "0x6A5E4060a05e2d7A17c3Efe83293853FAc254fA2";
+
+const tokens = [
+  { symbol: "ETH", name: "Ethereum", icon: eth, address: WETH, decimals: 18 },
+  { symbol: "USDT", name: "Tether", icon: usdt, address: USDT, decimals: 18 },
+  { symbol: "WNG", name: "Wangh", icon: xrp, address: WANGH, decimals: 18 },
+];
+
+export default function Liquidity() {
+  const [selectedPool, setSelectedPool] = useState(liquidityPools[0]);
+  const [showAddLiquidityForm, setShowAddLiquidityForm] = useState(false);
+
+  // store full token objects instead of just symbols
+  const [selectedToken1, setSelectedToken1] = useState(null);
+  const [selectedToken2, setSelectedToken2] = useState(null);
+
+  const [token1Amount, setToken1Amount] = useState("");
+  const [token2Amount, setToken2Amount] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [isToken1ModalOpen, setIsToken1ModalOpen] = useState(false);
+  const [isToken2ModalOpen, setIsToken2ModalOpen] = useState(false);
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  return (
+    <div className="space-y-6 mt-20 mb-10">
+      <div className="flex flex-col items-center gap-6 px-3">
+        {/* Add Liquidity Column */}
+        <div className="w-full sm:w-5/6 lg:w-1/2 ">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <span style={{ color: "#8357E8" }}>+</span>
+                Add Liquidity
+              </h2>
+              <p className="text-sm text-gray-600">
+                Add liquidity to earn rewards from trading fees
+              </p>
+            </div>
+
+            {!showAddLiquidityForm ? (
+              <div className="flex justify-center py-8">
+                <button
+                  onClick={() => setShowAddLiquidityForm(true)}
+                  className="w-full max-w-xs text-white py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:scale-105 active:scale-95 hover:shadow-xl border border-purple-200"
+                  style={{
+                    background: "linear-gradient(to right, #8357E8, #7c4ddb)",
+                  }}
+                >
+                  Add Liquidity
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* First Token */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">First Token</span>
+                    <span className="text-sm text-gray-600">Balance: 0</span>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setIsToken1ModalOpen(!isToken1ModalOpen)
+                          }
+                          className="flex items-center space-x-2 text-gray-900 font-semibold text-base cursor-pointer transition-all duration-300 hover:scale-105 flex-shrink-0"
+                        >
+                          {selectedToken1 && (
+                            <img
+                              className="h-10 w-10"
+                              src={selectedToken1.icon}
+                              alt={selectedToken1.name}
+                            />
+                          )}
+                          <span>{selectedToken1?.symbol || "Select"}</span>
+                          <svg
+                            className="w-4 h-4 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+
+                        {isToken1ModalOpen && (
+                          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-10">
+                            {tokens
+                              .filter((t) => t.symbol !== selectedToken2?.symbol)
+                              .map((token) => (
+                                <button
+                                  key={token.symbol}
+                                  onClick={() => {
+                                    setSelectedToken1(token);
+                                    setIsToken1ModalOpen(false);
+                                  }}
+                                  className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 first:rounded-t-xl last:rounded-b-xl transition-colors"
+                                >
+                                  <img
+                                    className="h-8 w-8"
+                                    src={token.icon}
+                                    alt={token.name}
+                                  />
+                                  <div className="text-left">
+                                    <div className="font-semibold text-gray-900">
+                                      {token.symbol}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      {token.name}
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <input
+                        type="number"
+                        value={token1Amount}
+                        onChange={(e) => setToken1Amount(e.target.value)}
+                        className="flex-1 bg-transparent text-xl font-bold text-gray-900 border-none outline-none text-right placeholder:text-gray-400"
+                        placeholder="0.0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Second Token */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Second Token</span>
+                    <span className="text-sm text-gray-600">Balance: 0</span>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setIsToken2ModalOpen(!isToken2ModalOpen)
+                          }
+                          className="flex items-center space-x-2 text-gray-900 font-semibold text-base cursor-pointer transition-all duration-300 hover:scale-105 flex-shrink-0"
+                        >
+                          {selectedToken2 && (
+                            <img
+                              className="h-10 w-10"
+                              src={selectedToken2.icon}
+                              alt={selectedToken2.name}
+                            />
+                          )}
+                          <span>{selectedToken2?.symbol || "Select"}</span>
+                          <svg
+                            className="w-4 h-4 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+
+                        {isToken2ModalOpen && (
+                          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-10">
+                            {tokens
+                              .filter((t) => t.symbol !== selectedToken1?.symbol)
+                              .map((token) => (
+                                <button
+                                  key={token.symbol}
+                                  onClick={() => {
+                                    setSelectedToken2(token);
+                                    setIsToken2ModalOpen(false);
+                                  }}
+                                  className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 first:rounded-t-xl last:rounded-b-xl transition-colors"
+                                >
+                                  <img
+                                    className="h-8 w-8"
+                                    src={token.icon}
+                                    alt={token.name}
+                                  />
+                                  <div className="text-left">
+                                    <div className="font-semibold text-gray-900">
+                                      {token.symbol}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      {token.name}
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <input
+                        type="number"
+                        value={token2Amount}
+                        onChange={(e) => setToken2Amount(e.target.value)}
+                        className="flex-1 bg-transparent text-xl font-bold text-gray-900 border-none outline-none text-right placeholder:text-gray-400"
+                        placeholder="0.0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price Range */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <span className="text-sm text-gray-600">Min Price</span>
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <input
+                        type="number"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        className="w-full bg-transparent text-lg font-bold text-gray-900 border-none outline-none placeholder:text-gray-400"
+                        placeholder="0.0"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-sm text-gray-600">Max Price</span>
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <input
+                        type="number"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        className="w-full bg-transparent text-lg font-bold text-gray-900 border-none outline-none placeholder:text-gray-400"
+                        placeholder="0.0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-4">
+                  <button
+                    onClick={() => setShowAddLiquidityForm(false)}
+                    className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold transition-all duration-300 hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="flex-1 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:scale-105 active:scale-95 hover:shadow-xl border border-purple-200"
+                    style={{
+                      background: "linear-gradient(to right, #8357E8, #7c4ddb)",
+                    }}
+                  >
+                    Confirm Add Liquidity
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Liquidity Pools Column */}
+        <div className="w-full sm:w-5/6 lg:w-1/2 ">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Liquidity Pools
+              </h2>
+              <p className="text-sm text-gray-600">
+                Select a pool to add or remove liquidity
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {liquidityPools.map((pool) => (
+                <div
+                  key={pool.id}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                    selectedPool.id === pool.id
+                      ? "shadow-lg"
+                      : "border-gray-200 hover:bg-gray-50"
+                  }`}
+                  style={{
+                    borderColor:
+                      selectedPool.id === pool.id ? "#8357E8" : undefined,
+                    backgroundColor:
+                      selectedPool.id === pool.id
+                        ? "#8357E8" + "08"
+                        : undefined,
+                  }}
+                  onClick={() => setSelectedPool(pool)}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex -space-x-2">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white"
+                          style={{
+                            background:
+                              "linear-gradient(to right, #8357E8, #7c4ddb)",
+                          }}
+                        >
+                          {pool.token1.charAt(0)}
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-700 border-2 border-white">
+                          {pool.token2.charAt(0)}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {pool.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          TVL: {formatCurrency(pool.tvl)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <span
+                        className="px-2 py-1 text-white text-xs font-semibold rounded-full"
+                        style={{
+                          backgroundColor: "#8357E8" + "33",
+                          color: "#8357E8",
+                        }}
+                      >
+                        {pool.apy}% APY
+                      </span>
+                      {pool.myLiquidity > 0 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full border border-gray-200">
+                          My: {formatCurrency(pool.myLiquidity)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">24h Volume:</span>
+                      <span className="ml-2 font-medium text-gray-900">
+                        {formatCurrency(pool.volume24h)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Pool Share:</span>
+                      <span className="ml-2 font-medium text-gray-900">
+                        {pool.poolShare}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
